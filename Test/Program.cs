@@ -8,8 +8,8 @@ namespace Test
     {
         private static ArraySegmentPool<byte> _ArraySegmentPool;
         private static int _segment_size;
-        private static int _itarations;
-        #region "main"
+        private static int _iterations;
+        #region "Main"
         public static void Main(string[] args)
         {
             print("Begin tests for ArraySegmentPool", ConsoleColor.Blue);
@@ -28,12 +28,12 @@ namespace Test
         private static void SpeedTest()
         {
             _segment_size = 1_000;
-            _itarations = 50_000_000;
-            print($"Speed test: 1 thread rent and return {_segment_size} segment size {_itarations} times");
+            _iterations = 50_000_000;
+            print($"Speed test: 1 thread rent and return {_segment_size} segment size {_iterations} times");
             _ArraySegmentPool = new ArraySegmentPool<byte>(_segment_size, 1, 1, true);
             Stopwatch Stopwatch = new Stopwatch();
             Stopwatch.Start();
-            for (int i = 1; i <= _itarations; i++)
+            for (int i = 1; i <= _iterations; i++)
             {
                 ArraySegment<byte> ArraySegment = _ArraySegmentPool.DangerousRent();
                 ArraySegment[0] = 1;
@@ -50,8 +50,8 @@ namespace Test
         private static void StressTest()
         {
             _segment_size = 1_000;
-            _itarations = 1_000_000;
-            print($"Speed test: 6 threads rent, copy, copy, check and return {_segment_size} segment size {_itarations} times");
+            _iterations = 1_000_000;
+            print($"Speed test: 6 threads rent, copy, copy, check and return {_segment_size} segment size {_iterations} times");
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
             _ArraySegmentPool = new ArraySegmentPool<byte>(_segment_size, 1, 1_000, true);
@@ -74,19 +74,19 @@ namespace Test
             thread5.Join();
             thread6.Join();
             print($"Elapsed:{stopwatch.ElapsedMilliseconds}ms. Capacity:{_ArraySegmentPool.Capacity} Count:{_ArraySegmentPool.Count} Fails:{_ArraySegmentPool.FailsCount}", ConsoleColor.Yellow);
-            if (_ArraySegmentPool.Capacity <= 18 & _ArraySegmentPool.Count == 0 & _ArraySegmentPool.FailsCount < _itarations * 3)
+            if (_ArraySegmentPool.Capacity <= 18 & _ArraySegmentPool.Count == 0 & _ArraySegmentPool.FailsCount < _iterations * 3)
                 print("TEST PASSED", ConsoleColor.Green);
             else
                 print("TEST FAILED", ConsoleColor.Red);
         }
         private static void StressTestWorker(object P_number)
         {
-            byte threadNumber = System.Convert.ToByte(P_number);
+            byte threadNumber = Convert.ToByte(P_number);
             Stopwatch stopwatch = new Stopwatch();
             byte[] buffer = new byte[_segment_size];
-            Array.Fill<byte>(buffer, threadNumber);
+            Array.Fill(buffer, threadNumber);
             stopwatch.Start();
-            for (int itaration = 0; itaration < _itarations; itaration++)
+            for (int iteration = 0; iteration < _iterations; iteration++)
             {
                 ArraySegment<byte> ArraySegment = _ArraySegmentPool.DangerousRent();
                 Array.Copy(buffer, 0, ArraySegment.Array, ArraySegment.Offset, ArraySegment.Count);
@@ -94,12 +94,12 @@ namespace Test
                 {
                     if (ArraySegment[i] != threadNumber)
                         throw new Exception("Test failed");
-                }
-                Array.Fill<byte>(buffer, 0);
+                }                
+                Array.Clear(buffer, 0, buffer.Length);
                 ArraySegment.CopyTo(buffer);
                 for (int i = 0; i < buffer.Length ; i++)
                 {
-                    if (ArraySegment[i] != threadNumber)
+                    if (buffer[i] != threadNumber | ArraySegment[i] != threadNumber)
                         throw new Exception("Test failed");
                 }
                 _ArraySegmentPool.Return(ref ArraySegment);
@@ -111,13 +111,13 @@ namespace Test
         private static void TrimTest()
         {
             _segment_size = 1_000;
-            _itarations = 2_147_483;
-            print($"Trim test: 1 thread rent size:{_segment_size} x{_itarations} times, return all, trim");
+            _iterations = 2_147_483;
+            print($"Trim test: 1 thread rent size:{_segment_size} x{_iterations} times, return all, trim");
             Stopwatch Stopwatch = new Stopwatch();
             Stopwatch.Start();
-            List<ArraySegment<byte>> List = new List<ArraySegment<byte>>(_itarations);
-            _ArraySegmentPool = new ArraySegmentPool<byte>(_segment_size, 1, _itarations, true);
-            for (int i = 1; i <= _itarations; i++)
+            List<ArraySegment<byte>> List = new List<ArraySegment<byte>>(_iterations);
+            _ArraySegmentPool = new ArraySegmentPool<byte>(_segment_size, 1, _iterations, true);
+            for (int i = 1; i <= _iterations; i++)
                 List.Add(_ArraySegmentPool.DangerousRent());
             print($"Rent finished. Elapsed:{Stopwatch.ElapsedMilliseconds}ms. Capacity:{_ArraySegmentPool.Capacity} Count:{_ArraySegmentPool.Count} Fails:{_ArraySegmentPool.FailsCount}");                                                     
             for (int i = 0; i < List.Count; i++)
@@ -140,7 +140,7 @@ namespace Test
         private static void SliceTest()
         {
             _segment_size = 100;
-            _itarations = 0;
+            _iterations = 0;
             print($"Slice test: 1 thread rent size:{_segment_size}, check, slice, return, check");
             Stopwatch Stopwatch = new Stopwatch();
             Stopwatch.Start();
