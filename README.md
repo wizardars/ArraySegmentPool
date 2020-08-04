@@ -1,0 +1,2 @@
+# ArraySegmentPool
+Pool for ArraySegments.
