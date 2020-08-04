@@ -2,13 +2,13 @@
 namespace ArraySegmentPool
 {
     /// <summary>
-    /// Implements a dangerous, thread safe, auto resizable Pool that uses an array of objects to store the fixed size ArraySegments.
-    /// The best fit is when one thread rent, same or others returns back short-lived objects.
-    /// (!) WARNING: If the ArraySegment is not returned, a memory leak will occur.
-    /// (!) WARNING: Do not use this pool for long-lived objects, otherwise the memory consumption will be enormous.
-    /// (!) WARNING: Slice ArraySegment to zero not permitted.
-    /// (!) WARNING: User of this pool must strictly understand how the structure differs from the class.
-    /// (!) WARNING: If the user has made many copies of the ArraySegment, then only one copy needs to be returned to the pool. After returning, you should not use the leftover copies, as this will corrupt the data.
+    /// Implements a dangerous, thread safe, auto resizable Pool that uses an array of objects to store <see cref="ArraySegment{T}"/>.
+    /// The best fit is when one thread <see cref="DangerousRent"/>, same or others <see cref="Return"/> back short-lived <see cref="ArraySegment{T}"/>.
+    /// (!) WARNING: If the <see cref="ArraySegment{T}"/> is not returned, a memory leak will occur.
+    /// (!) WARNING: Do not use <see cref="ArraySegmentPool{T}"/> for long-lived objects, otherwise the memory consumption will be enormous.
+    /// (!) WARNING: Slice <see cref="ArraySegment{T}"/> to zero not permitted.
+    /// (!) WARNING: User of <see cref="ArraySegmentPool{T}"/> must strictly understand how the structure differs from the class.
+    /// (!) WARNING: If the user has made many copies of the <see cref="ArraySegment{T}"/>, then only one copy needs to be returned to the <see cref="ArraySegmentPool{T}"/>. After returning, you should not use the leftover copies, as this will corrupt the data.
     /// </summary>
     /// <typeparam name="T"></typeparam>
     public class ArraySegmentPool<T>
@@ -18,9 +18,9 @@ namespace ArraySegmentPool
         private readonly int _default_ArraySegment_length;
         private readonly int _max_capacity;
         private readonly int _initial_capacity;
-        private readonly object _pool_lock = new object();               
+        private readonly object _pool_lock = new object();
         /// <summary>
-        /// Gets the number of rented segments after last resize.
+        /// Gets the number of rented <see cref="ArraySegment{T}"/> after last resize.
         /// </summary>
         public int Count
         {
@@ -30,7 +30,7 @@ namespace ArraySegmentPool
             }
         }
         /// <summary>
-        /// Gets the total number of segments after last resize.
+        /// Gets the total number of <see cref="ArraySegment{T}"/> after last resize.
         /// </summary>
         public int Capacity
         {
@@ -41,7 +41,7 @@ namespace ArraySegmentPool
         }
 #if UT
         /// <summary>
-        /// (Debug) Shows how many unsuccessful attempts were made before the segment was taken.
+        /// (Debug) Shows how many unsuccessful attempts were made before the <see cref="ArraySegment{T}"/> was taken.
         /// </summary>
         private long _fails_count;
         public long FailsCount
@@ -73,7 +73,7 @@ namespace ArraySegmentPool
         }        
 #endif
         /// <summary>
-        /// Main storage of the pool.                                                                                                                                                 
+        /// Main storage of the <see cref="ArraySegmentPool{T}"/>.
         /// </summary>
         private class _pool
         {
@@ -83,11 +83,11 @@ namespace ArraySegmentPool
             volatile public int Last_rented_segment; // DangerousRent using that value to find next free segment.
         }
         /// <summary>
-        /// Constructs a new pool.
+        /// Constructs a new <see cref="ArraySegmentPool{T}"/>.
         /// </summary>
-        /// <param name="DefaultLength">Default length of the segment</param>
-        /// <param name="InitialCapacity">Initial segments count</param>
-        /// <param name="MaxCapacity">Maximum count of ArraySegments</param>
+        /// <param name="DefaultLength">Default length of the <see cref="ArraySegment{T}"/></param>
+        /// <param name="InitialCapacity">Initial <see cref="ArraySegment{T}"/> count</param>
+        /// <param name="MaxCapacity">Maximum count of <see cref="ArraySegment{T}"/></param>
         /// <param name="AutoResize">Allow auto resize</param>
         public ArraySegmentPool(int DefaultLength, int InitialCapacity, int MaxCapacity, bool AutoResize)
         {
@@ -104,9 +104,9 @@ namespace ArraySegmentPool
             _current_pool = new _pool() { Array_layout = new int[InitialCapacity], Array = new T[DefaultLength * InitialCapacity] };
         }
         /// <summary>
-        /// (!) Dangerous. Gets an ArraySegment of the default length. ArraySegment must be returned via <see cref="Return"/> on the same <see cref="ArraySegmentPool{T}"/> instance to avoid memory leaks.
+        /// (!) Dangerous. Gets an <see cref="ArraySegment{T}"/> of the default length. <see cref="ArraySegment{T}"/> must be returned via <see cref="Return"/> on the same <see cref="ArraySegmentPool{T}"/> instance to avoid memory leaks.
         /// </summary>
-        /// <returns></returns>
+        /// <returns><see cref="ArraySegment{T}"/></returns>
         public ArraySegment<T> DangerousRent()
         {
             return DangerousRent(_default_ArraySegment_length);
@@ -115,7 +115,7 @@ namespace ArraySegmentPool
         /// (!) Dangerous. Gets an ArraySegment of the custom length. ArraySegment must be returned via <see cref="Return"/> on the same <see cref="ArraySegmentPool{T}"/> instance to avoid memory leaks.
         /// </summary>    
         /// <param name="Length">Lenght of the rented segment. Lenght must be equal or smaller than "DefaultLength"</param>
-        /// <returns></returns>
+        /// <returns><see cref="ArraySegment{T}"/></returns>
         public ArraySegment<T> DangerousRent(int Length)
         {
             if (Length < 1 | Length > _default_ArraySegment_length)
@@ -153,7 +153,7 @@ namespace ArraySegmentPool
             while (true);
         }
         /// <summary>
-        /// Returns to the pool an segment that was previously obtained via <see cref="DangerousRent()"/> on the same <see cref="ArraySegmentPool{T}"/> instance.
+        /// Returns to the <see cref="ArraySegmentPool{T}"/> an <see cref="ArraySegment{T}"/> that was previously obtained via <see cref="DangerousRent"/> on the same <see cref="ArraySegmentPool{T}"/> instance.
         /// </summary>
         /// <param name="ArraySegment"></param>
         public void Return(ref ArraySegment<T> ArraySegment)
@@ -172,7 +172,7 @@ namespace ArraySegmentPool
             ArraySegment = ArraySegment<T>.Empty;
         }
         /// <summary>
-        /// Sets the capacity of this pool to the size of the used ArraySegments or initial capacity. This method can be used to minimize a pool's memory overhead once it is known that no new segments will be added to the pool.
+        /// Sets the capacity of <see cref="ArraySegmentPool{T}"/> to the size of the used <see cref="ArraySegment{T}"/> or initial capacity. This method can be used to minimize a pool's memory overhead once it is known that no new <see cref = "ArraySegment{T}" /> will be added to the <see cref= "ArraySegmentPool{T}"/>.
         /// </summary>
         public void TrimExcess()
         {
@@ -187,7 +187,7 @@ namespace ArraySegmentPool
             }
         }
         /// <summary>
-        /// Resize the pool and update the instance reference.
+        /// Resize the <see cref="ArraySegmentPool{T}"/> and update the instance reference.
         /// </summary>
         /// <param name="pool"></param>
         /// <returns>New pool</returns>
