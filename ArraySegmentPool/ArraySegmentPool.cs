@@ -12,11 +12,11 @@
     /// <typeparam name="T"></typeparam>
     public class ArraySegmentPool<T>
     {
-        private volatile _pool _current_pool;
-        private readonly bool _is_auto_resize;
-        private readonly int _max_ArraySegment_length;
-        private readonly int _max_capacity;        
-        private readonly object _pool_lock = new object();
+        private volatile _pool _currentPool;
+        private readonly bool _isAutoResize;
+        private readonly int _maxArraySegmentLength;
+        private readonly int _maxCapacity;
+        private readonly object _poolLock = new object();
         /// <summary>
         /// Gets the number of rented <see cref="ArraySegment{T}"/> after last resize.
         /// </summary>
@@ -24,7 +24,7 @@
         {
             get
             {
-                return _current_pool.Count;
+                return _currentPool.Count;
             }
         }
         /// <summary>
@@ -34,7 +34,7 @@
         {
             get
             {
-                return _current_pool.Array_layout.Length;
+                return _currentPool.ArrayLayout.Length;
             }
         }
         /// <summary>
@@ -44,7 +44,7 @@
         {
             get
             {
-                return _max_capacity;
+                return _maxCapacity;
             }
         }
         /// <summary>
@@ -55,19 +55,19 @@
         {
             get
             {
-                return _is_auto_resize;
+                return _isAutoResize;
             }
         }
 #if UT
         /// <summary>
         /// (Debug) Shows how many unsuccessful attempts were made before the <see cref="ArraySegment{T}"/> was taken.
         /// </summary>
-        private long _fails_count;
+        private long _failsCount;
         public long FailsCount
         {
             get
             {
-                return _fails_count;
+                return _failsCount;
             }
         }
         /// <summary>
@@ -77,7 +77,7 @@
         {
             get
             {
-                return _current_pool.Last_rented_segment;
+                return _currentPool.LastRentedSegment;
             }
         }
         /// <summary>
@@ -87,7 +87,7 @@
         {
             get
             {
-                return _current_pool.Array_layout;
+                return _currentPool.ArrayLayout;
             }
         }        
 #endif
@@ -97,35 +97,35 @@
         private class _pool
         {
             volatile public T[] Array; // Stores segments.
-            volatile public int[] Array_layout; // Stores information about rented segments.(Interlocked not support byte)
+            volatile public int[] ArrayLayout; // Stores information about rented segments.(Interlocked not support byte)
             volatile public int Count; // Stores number of used segments.
-            volatile public int Last_rented_segment; // DangerousRent using that value to find next free segment.
+            volatile public int LastRentedSegment; // DangerousRent using that value to find next free segment.
         }
         /// <summary>
         /// Constructs a new <see cref="ArraySegmentPool{T}"/> with fixed capacity size.
         /// </summary>
-        /// <param name="MaxArraySegmentLength">Maximum length of the <see cref="ArraySegment{T}"/></param>
-        /// <param name="FixedCapacity">Maximum count of <see cref="ArraySegment{T}"/></param>            
-        public ArraySegmentPool(int MaxArraySegmentLength, int FixedCapacity) : this(MaxArraySegmentLength, FixedCapacity, FixedCapacity, false) { }
+        /// <param name="maxArraySegmentLength">Maximum length of the <see cref="ArraySegment{T}"/></param>
+        /// <param name="fixedCapacity">Maximum count of <see cref="ArraySegment{T}"/></param>            
+        public ArraySegmentPool(int maxArraySegmentLength, int fixedCapacity) : this(maxArraySegmentLength, fixedCapacity, fixedCapacity, false) { }
         /// <summary>
         /// Constructs a new auto resizeble <see cref="ArraySegmentPool{T}"/>.
         /// </summary>
-        /// <param name="MaxArraySegmentLength">Maximum length of the <see cref="ArraySegment{T}"/></param>
-        /// <param name="InitialCapacity">Initial <see cref="ArraySegment{T}"/> count</param>
-        /// <param name="MaxCapacity">Maximum count of <see cref="ArraySegment{T}"/></param>
-        public ArraySegmentPool(int MaxArraySegmentLength, int InitialCapacity, int MaxCapacity) : this(MaxArraySegmentLength, InitialCapacity, MaxCapacity, true) { }
-        private ArraySegmentPool(int MaxArraySegmentLength, int InitialCapacity, int MaxCapacity, bool AutoResize)
+        /// <param name="maxArraySegmentLength">Maximum length of the <see cref="ArraySegment{T}"/></param>
+        /// <param name="initialCapacity">Initial <see cref="ArraySegment{T}"/> count</param>
+        /// <param name="maxCapacity">Maximum count of <see cref="ArraySegment{T}"/></param>
+        public ArraySegmentPool(int maxArraySegmentLength, int initialCapacity, int maxCapacity) : this(maxArraySegmentLength, initialCapacity, maxCapacity, true) { }
+        private ArraySegmentPool(int maxArraySegmentLength, int initialCapacity, int maxCapacity, bool autoResize)
         {
-            if (MaxArraySegmentLength < 1 | InitialCapacity < 1 | MaxCapacity < 1)
+            if (maxArraySegmentLength < 1 | initialCapacity < 1 | maxCapacity < 1)
                 throw new ArgumentOutOfRangeException("Arguments must be greater than 1");
-            if (InitialCapacity > MaxCapacity)
+            if (initialCapacity > maxCapacity)
                 throw new ArgumentOutOfRangeException("InitialCapacity > MaxCapacity");
-            if ((long)MaxArraySegmentLength * MaxCapacity > int.MaxValue)
+            if ((long)maxArraySegmentLength * maxCapacity > int.MaxValue)
                 throw new OverflowException("MaxCapacity");
-            _max_ArraySegment_length = MaxArraySegmentLength;
-            _max_capacity = MaxCapacity;
-            _is_auto_resize = AutoResize;
-            _current_pool = new _pool() { Array_layout = new int[InitialCapacity], Array = new T[_max_ArraySegment_length * InitialCapacity] };
+            _maxArraySegmentLength = maxArraySegmentLength;
+            _maxCapacity = maxCapacity;
+            _isAutoResize = autoResize;
+            _currentPool = new _pool() { ArrayLayout = new int[initialCapacity], Array = new T[_maxArraySegmentLength * initialCapacity] };
         }
         /// <summary>
         /// (!) Dangerous. Gets an <see cref="ArraySegment{T}"/> of the default length. <see cref="ArraySegment{T}"/> must be returned via <see cref="Return"/> on the same <see cref="ArraySegmentPool{T}"/> instance to avoid memory leaks.
@@ -133,45 +133,45 @@
         /// <returns><see cref="ArraySegment{T}"/></returns>
         public ArraySegment<T> DangerousRent()
         {
-            return DangerousRent(_max_ArraySegment_length);
+            return DangerousRent(_maxArraySegmentLength);
         }
         /// <summary>
-        /// (!) Dangerous. Gets an ArraySegment of the custom length. ArraySegment must be returned via <see cref="Return"/> on the same <see cref="ArraySegmentPool{T}"/> instance to avoid memory leaks.
+        /// (!) Dangerous. Gets an <see cref="ArraySegment{T}"/> of the custom length. <see cref="ArraySegment{T}"/> must be returned via <see cref="Return"/> on the same <see cref="ArraySegmentPool{T}"/> instance to avoid memory leaks.
         /// </summary>    
-        /// <param name="Length">Lenght of the rented segment. Lenght must be equal or smaller than "DefaultLength"</param>
+        /// <param name="length">Lenght of the rented <see cref="ArraySegment{T}"/>. Lenght must be equal or smaller than <see cref="defaultLength"/></param>
         /// <returns><see cref="ArraySegment{T}"/></returns>
-        public ArraySegment<T> DangerousRent(int Length)
+        public ArraySegment<T> DangerousRent(int length)
         {
-            if (Length < 1 | Length > _max_ArraySegment_length)
+            if (length < 1 | length > _maxArraySegmentLength)
                 throw new ArgumentOutOfRangeException("Length must be greater than one and smaller than default length");
-            _pool pool = _current_pool;
+            _pool pool = _currentPool;
             //Get new resized pool if free segment not finded.
-            if (pool.Count >= pool.Array_layout.Length)
-                pool = get_new_pool(pool);
+            if (pool.Count >= pool.ArrayLayout.Length)
+                pool = GetNewPool(pool);
             //Try find free segment and ocupy.
-            int position = pool.Last_rented_segment + 1;
-            int search_count = 0;
+            int position = pool.LastRentedSegment + 1;
+            int searchCount = 0;
             do
             {
-                if (position > pool.Array_layout.GetUpperBound(0))
+                if (position > pool.ArrayLayout.GetUpperBound(0))
                     position = 0;
-                if (System.Threading.Interlocked.CompareExchange(ref pool.Array_layout[position], 1, 0) == 0)
+                if (System.Threading.Interlocked.CompareExchange(ref pool.ArrayLayout[position], 1, 0) == 0)
                 {
                     System.Threading.Interlocked.Increment(ref pool.Count);
-                    pool.Last_rented_segment = position;
-                    return new ArraySegment<T>(pool.Array, position * _max_ArraySegment_length, Length);
+                    pool.LastRentedSegment = position;
+                    return new ArraySegment<T>(pool.Array, position * _maxArraySegmentLength, length);
                 }
 #if UT
-                System.Threading.Interlocked.Increment(ref _fails_count);
+                System.Threading.Interlocked.Increment(ref _failsCount);
 #endif
                 position += 1;
-                search_count += 1;
+                searchCount += 1;
                 //That check prevent state, where thread will loop forever.
-                if (search_count == pool.Array_layout.Length)
+                if (searchCount == pool.ArrayLayout.Length)
                 {
-                    pool = get_new_pool(pool);
+                    pool = GetNewPool(pool);
                     position = 0;
-                    search_count = 0;
+                    searchCount = 0;
                 }
             }
             while (true);
@@ -184,12 +184,12 @@
         {
             if (ArraySegment.Count == 0)
                 throw new ArgumentException("Do not Slice rented ArraySegment to zero, since the pool will not be able to free memory");
-            _pool pool = _current_pool;
+            _pool pool = _currentPool;
             if (ArraySegment.Array == pool.Array)
             {
                 //return segment.
-                int position = ArraySegment.Offset / _max_ArraySegment_length;
-                if (System.Threading.Interlocked.Exchange(ref pool.Array_layout[position], 0) == 0)
+                int position = ArraySegment.Offset / _maxArraySegmentLength;
+                if (System.Threading.Interlocked.Exchange(ref pool.ArrayLayout[position], 0) == 0)
                     throw new Exception("ArraySegment was returned already");
                 System.Threading.Interlocked.Decrement(ref pool.Count);
             }
@@ -200,14 +200,14 @@
         /// </summary>
         public void TrimExcess()
         {
-            lock (_pool_lock)
+            lock (_poolLock)
             {
-                if (_is_auto_resize == false)
+                if (_isAutoResize == false)
                     throw new AccessViolationException("Can't trim while auto resize false");
-                int count = _current_pool.Count;
+                int count = _currentPool.Count;
                 int new_layout_length = count > 1 ? count : 1;
-                int new_length = new_layout_length * _max_ArraySegment_length;
-                _current_pool = new _pool() { Array_layout = new int[new_layout_length], Array = new T[new_length] };
+                int new_length = new_layout_length * _maxArraySegmentLength;
+                _currentPool = new _pool() { ArrayLayout = new int[new_layout_length], Array = new T[new_length] };
             }
         }
         /// <summary>
@@ -215,24 +215,24 @@
         /// </summary>
         /// <param name="pool"></param>
         /// <returns>New pool</returns>
-        private _pool get_new_pool(_pool pool)
+        private _pool GetNewPool(_pool pool)
         {
-            lock (_pool_lock)
+            lock (_poolLock)
             {
-                if (_is_auto_resize == false)
+                if (_isAutoResize == false)
                     throw new OverflowException("ArraySegmentPool size out of max capacity");
                 //check if other thread already create new resized pool.
-                if (pool != _current_pool)
-                    return _current_pool;
+                if (pool != _currentPool)
+                    return _currentPool;
                 //check limits.
-                if (pool.Array_layout.Length == _max_capacity)
+                if (pool.ArrayLayout.Length == _maxCapacity)
                     throw new OverflowException("ArraySegmentPool size out of max capacity");
-                //create new resized pool and refresh current ref
-                int new_layout_length = pool.Array_layout.Length * 2L < _max_capacity ? pool.Array_layout.Length * 2 : _max_capacity;
-                int new_length = _max_ArraySegment_length * new_layout_length;
-                _current_pool = new _pool() { Array_layout = new int[new_layout_length], Array = new T[new_length] };
+                //create new resized pool and refresh current ref.
+                int newLayoutLength = pool.ArrayLayout.Length * 2L < _maxCapacity ? pool.ArrayLayout.Length * 2 : _maxCapacity;
+                int newLength = _maxArraySegmentLength * newLayoutLength;
+                _currentPool = new _pool() { ArrayLayout = new int[newLayoutLength], Array = new T[newLength] };
                 //return new pool.
-                return _current_pool;
+                return _currentPool;
             }
         }
     }
