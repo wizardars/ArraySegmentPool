@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using ArraySegmentPool;
+using System.Buffers.ArraySegmentPool;
 namespace Test
 {
     class Program
@@ -30,7 +30,7 @@ namespace Test
             _segment_size = 1_000;
             _iterations = 50_000_000;
             print($"Speed test: 1 thread rent and return {_segment_size} segment size {_iterations} times");
-            _ArraySegmentPool = new ArraySegmentPool<byte>(_segment_size, 1, 1, true);
+            _ArraySegmentPool = new ArraySegmentPool<byte>(_segment_size, 1, 1);
             Stopwatch Stopwatch = new Stopwatch();
             Stopwatch.Start();
             for (int i = 1; i <= _iterations; i++)
@@ -54,7 +54,7 @@ namespace Test
             print($"Speed test: 6 threads rent, copy, copy, check and return {_segment_size} segment size {_iterations} times");
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
-            _ArraySegmentPool = new ArraySegmentPool<byte>(_segment_size, 1, 1_000, true);
+            _ArraySegmentPool = new ArraySegmentPool<byte>(_segment_size, 1, 1_000);
             System.Threading.Thread thread1 = new System.Threading.Thread(StressTestWorker) { IsBackground = true };
             System.Threading.Thread thread2 = new System.Threading.Thread(StressTestWorker) { IsBackground = true };
             System.Threading.Thread thread3 = new System.Threading.Thread(StressTestWorker) { IsBackground = true };
@@ -116,7 +116,7 @@ namespace Test
             Stopwatch Stopwatch = new Stopwatch();
             Stopwatch.Start();
             List<ArraySegment<byte>> List = new List<ArraySegment<byte>>(_iterations);
-            _ArraySegmentPool = new ArraySegmentPool<byte>(_segment_size, 1, _iterations, true);
+            _ArraySegmentPool = new ArraySegmentPool<byte>(_segment_size, 1, _iterations);
             for (int i = 1; i <= _iterations; i++)
                 List.Add(_ArraySegmentPool.DangerousRent());
             print($"Rent finished. Elapsed:{Stopwatch.ElapsedMilliseconds}ms. Capacity:{_ArraySegmentPool.Capacity} Count:{_ArraySegmentPool.Count} Fails:{_ArraySegmentPool.FailsCount}");                                                     
@@ -144,7 +144,7 @@ namespace Test
             print($"Slice test: 1 thread rent size:{_segment_size}, check, slice, return, check");
             Stopwatch Stopwatch = new Stopwatch();
             Stopwatch.Start();
-            _ArraySegmentPool = new ArraySegmentPool<byte>(_segment_size, 10, 10, false);
+            _ArraySegmentPool = new ArraySegmentPool<byte>(_segment_size, 10);
             bool IsError = false;
             ArraySegment<byte> ArraySegment;
             try
@@ -195,7 +195,7 @@ namespace Test
             }
             catch (Exception ex)
             {
-                print($"Exception: segment not returned", ConsoleColor.Red);
+                print($"Exception: {ex.Message}", ConsoleColor.Red);
                 return false;
             }
             if (Array.FindIndex<int>(_ArraySegmentPool.UnderlyingLayoutArray, predicateFindOne) != -1)
