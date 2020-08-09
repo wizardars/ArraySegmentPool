@@ -28,19 +28,19 @@ Pool for ArraySegments.
 ### Usage:
 #### Initialize
 ```C#
-int MaxArraySegmentLength = 9_038;
-int InitialCapacity = 1;
-int MaxCapacity = 100_000;
-var ArraySegmentPool = new ArraySegmentPool<byte>(MaxArraySegmentLength, InitialCapacity, MaxCapacity);
+int maxArraySegmentLength = 9_038;
+int initialCapacity = 1;
+int maxCapacity = 100_000;
+var arraySegmentPool = new ArraySegmentPool<byte>(maxArraySegmentLength, initialCapacity, maxCapacity);
 ```
 
-#### Rent ArraySegment
+#### Rent
 ```C#
-int ArraySegmentLength = 1250;
-var ArraySegment = ArraySegmentPool.DangerousRent(ArraySegmentLength);
+int arraySegmentLength = 1250;
+ArraySegment<byte> arraySegment = arraySegmentPool.DangerousRent(arraySegmentLength);
 ```
 
-#### Return ArraySegment
+#### Return
 ```C#
-ArraySegmentPool.Return(ref ArraySegment);
+arraySegmentPool.Return(ref arraySegment);
 ```
