@@ -11,17 +11,18 @@ Pool for ArraySegments.
 
 ### Model:
 ```
+                      POOL
    .---------------------------------------------.
    |                                             |
-   | Array_layout => [1][2][3]                   |
+   |  arrayLayout => [1][2][3]                   |
    |                  |  |  +-----------+        |
    |                  |  +-----+        |        |
    |                  |        |        |        |
    |                  v        v        v        |
-   |        Array => [1][1][1][2][2][2][3][3][3] |
+   |        array => [1][1][1][2][2][2][3][3][3] |
    |                                             |
-   | if Array_layout[x] = 0 (free)               |
-   | if Array_layout[x] = 1 (rented)             |
+   |  if arrayLayout[x] = 0 (free)               |
+   |  if arrayLayout[x] = 1 (rented)             |
    '---------------------------------------------'
 ```
 
