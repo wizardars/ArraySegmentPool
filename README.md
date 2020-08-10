@@ -11,7 +11,7 @@ Pool for ArraySegments.
 
 ### Model:
 ```
-                          POOL
+                         POOL
    .---------------------------------------------.
    |                                             |
    |  arrayLayout => [1][2][3]                   |
